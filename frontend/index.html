@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Git Terminal Simulator</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Title Bar -->
+  <div class="titlebar">
+    <div class="titlebar-dots">
+      <span class="dot dot-red"></span>
+      <span class="dot dot-yellow"></span>
+      <span class="dot dot-green"></span>
+    </div>
+    <span class="titlebar-title">git-simulator — bash — 80×24</span>
+    <button class="reset-btn" id="btn-reset" title="Reset session">↺ Reset</button>
+  </div>
+
+  <!-- Main Layout -->
+  <div class="layout">
+
+    <!-- LEFT: Terminal -->
+    <section class="terminal-section">
+      <div class="pane-header">
+        <span class="pane-dot"></span>TERMINAL
+      </div>
+
+      <div class="output" id="output" aria-live="polite" aria-label="Terminal output"></div>
+
+      <div class="hint-row" id="hints" aria-label="Quick commands"></div>
+
+      <div class="input-row">
+        <span class="prompt" id="prompt-label">user@git-sim:~/project $</span>
+        <input
+          type="text"
+          id="cmd-input"
+          placeholder="พิมพ์คำสั่ง git เช่น git init"
+          autocomplete="off"
+          spellcheck="false"
+          aria-label="Command input"
+        />
+      </div>
+
+      <!-- Status bar -->
+      <div class="statusbar">
+        <span class="status-item">⎇ <span id="s-branch">-</span></span>
+        <span class="status-item">↑ <span id="s-commits">0</span> commits</span>
+        <span class="status-item">📁 <span id="s-staged">0</span> staged</span>
+        <span class="status-item">📝 <span id="s-untracked">0</span> untracked</span>
+        <span class="status-item status-conn" id="s-conn">⬤ connecting…</span>
+      </div>
+    </section>
+
+    <!-- RIGHT: Graph + Cheatsheet -->
+    <section class="right-section">
+      <div class="tabs" role="tablist">
+        <button class="tab active" role="tab" aria-selected="true"  data-tab="graph"  onclick="switchTab('graph',this)">⬡ Git Graph</button>
+        <button class="tab"        role="tab" aria-selected="false" data-tab="cheat"  onclick="switchTab('cheat',this)">📋 คำสั่ง</button>
+      </div>
+
+      <div class="tab-panel active" id="tab-graph" role="tabpanel">
+        <div class="graph-wrap" id="graph-wrap">
+          <div class="empty-graph">
+            ยังไม่มี commit<br><br>
+            เริ่มต้นด้วย:<br>
+            <code>git init</code><br>
+            <code>git add .</code><br>
+            <code>git commit -m "first commit"</code>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-cheat" role="tabpanel">
+        <div class="cheatsheet" id="cheatsheet"></div>
+      </div>
+    </section>
+
+  </div><!-- /.layout -->
+
+  <script src="app.js"></script>
+</body>
+</html>
