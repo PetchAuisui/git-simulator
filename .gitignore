@@ -1,4 +1,8 @@
-workspace/
 node_modules/
-.env
+dist/
 .DS_Store
+workspace/
+frontend/node_modules/
+backend/node_modules/
+.env
+.env.*

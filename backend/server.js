@@ -8,6 +8,7 @@ const db = require('./db');
 const fileRoutes = require('./routes/files');
 const gitRoutes = require('./routes/git');
 const authRoutes = require('./routes/auth');
+const terminalRoutes = require('./routes/terminal');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -48,6 +49,7 @@ const authenticate = (req, res, next) => {
 // Apply auth middleware to file and git routes
 app.use('/api/files', authenticate, fileRoutes);
 app.use('/api/git', authenticate, gitRoutes);
+app.use('/api/terminal', authenticate, terminalRoutes);
 
 app.get('/api/workspace', authenticate, (req, res) => {
     res.json({ workspaceRoot: req.workspaceRoot, username: req.user.username });

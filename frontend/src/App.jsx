@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster, toast } from 'react-hot-toast';
 import FileExplorer from './components/FileExplorer';
 import GitPanel from './components/GitPanel';
+import Terminal from './components/Terminal';
 import AuthScreen from './components/AuthScreen';
 import LandingPage from './components/LandingPage';
 import { AuthContext } from './contexts/AuthContext';
@@ -12,6 +13,8 @@ function MainApp() {
   const { user, logout } = useContext(AuthContext);
   const [gitStatus, setGitStatus] = useState(null);
   const [isRepo, setIsRepo] = useState(false);
+  const [isTerminalOpen, setIsTerminalOpen] = useState(false);
+  const [terminalPath, setTerminalPath] = useState('');
 
   const fetchGitStatus = useCallback(async () => {
     try {
@@ -32,14 +35,14 @@ function MainApp() {
     fetchGitStatus();
   }, [fetchGitStatus]);
 
-  const handleInitRepo = async () => {
-    try {
-      await gitApi.init();
-      toast.success('Git repository initialized!');
-      fetchGitStatus();
-    } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to initialize repo');
-    }
+  const handleOpenTerminal = (path) => {
+    setTerminalPath(path || '');
+    setIsTerminalOpen(true);
+  };
+
+  const handleCloseTerminal = () => {
+    setIsTerminalOpen(false);
+    setTerminalPath('');
   };
 
   return (
@@ -77,7 +80,7 @@ function MainApp() {
             File Explorer
           </div>
           <div className="flex-1 overflow-auto p-4">
-             <FileExplorer onFileChange={fetchGitStatus} />
+             <FileExplorer onFileChange={fetchGitStatus} onOpenTerminal={handleOpenTerminal} />
           </div>
         </div>
 
@@ -87,14 +90,6 @@ function MainApp() {
             <span className="font-medium text-slate-400 uppercase text-xs tracking-wider">
               Git Source Control
             </span>
-            {!isRepo && (
-               <button 
-                onClick={handleInitRepo}
-                className="px-3 py-1.5 text-xs font-medium rounded-md bg-emerald-600 hover:bg-emerald-500 text-white transition-colors"
-               >
-                 Initialize Repo
-               </button>
-            )}
           </div>
           
           <div className="flex-1 overflow-auto p-6">
@@ -107,19 +102,23 @@ function MainApp() {
                 </div>
                 <h3 className="text-lg font-medium text-slate-400">Not a Git Repository</h3>
                 <p className="text-sm max-w-sm text-center">
-                  The current workspace is not tracked by Git. Initialize a repository to start tracking files and changes.
+                  The current workspace is not tracked by Git. Use the terminal to run <code className="bg-slate-800 px-2 py-1 rounded text-orange-400">git init</code> to initialize a repository.
                 </p>
-                <button 
-                  onClick={handleInitRepo}
-                  className="mt-4 px-4 py-2 rounded-lg bg-git-primary hover:bg-git-secondary text-white font-medium transition-colors shadow-lg shadow-orange-500/20"
-                >
-                  Create Git Repository
-                </button>
               </div>
             )}
           </div>
         </div>
       </div>
+
+      {/* Terminal Window */}
+      {isTerminalOpen && (
+        <Terminal 
+          workingPath={terminalPath}
+          onClose={handleCloseTerminal}
+          refreshStatus={fetchGitStatus}
+          onRepoInitialized={fetchGitStatus}
+        />
+      )}
     </div>
   );
 }

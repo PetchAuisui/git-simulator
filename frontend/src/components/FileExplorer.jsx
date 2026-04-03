@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { fileApi } from '../api';
-import { Folder, FolderOpen, File as FileIcon, Plus, Trash2, Edit2, FilePlus, FolderPlus, MoreVertical, X, Check } from 'lucide-react';
+import { Folder, FolderOpen, File as FileIcon, Plus, Trash2, Edit2, FilePlus, FolderPlus, MoreVertical, X, Check, Terminal as TerminalIcon } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -10,7 +10,7 @@ const joinPath = (parent, child) => parent ? `${parent}/${child}` : child;
 
 // Component to render individual items recursively if needed
 // For simplicity we use a flat recursive structure
-const FileTreeItem = ({ item, parentPath, onRefresh, onFileChange, onMove }) => {
+const FileTreeItem = ({ item, parentPath, onRefresh, onFileChange, onMove, onOpenTerminal }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [children, setChildren] = useState([]);
   const [isHovered, setIsHovered] = useState(false);
@@ -146,6 +146,11 @@ const FileTreeItem = ({ item, parentPath, onRefresh, onFileChange, onMove }) => 
         {/* Actions */}
         {!isRenaming && isHovered && (
           <div className="flex gap-1 items-center opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
+            {item.isDirectory && (
+              <button title="Open Terminal" className="p-1 text-slate-500 hover:text-green-400 hover:bg-slate-700 rounded" onClick={() => onOpenTerminal && onOpenTerminal(item.path)}>
+                <TerminalIcon size={14} />
+              </button>
+            )}
             <button title="Rename" className="p-1 text-slate-500 hover:text-slate-300 hover:bg-slate-700 rounded" onClick={() => setIsRenaming(true)}>
               <Edit2 size={14} />
             </button>
@@ -169,6 +174,7 @@ const FileTreeItem = ({ item, parentPath, onRefresh, onFileChange, onMove }) => 
                 onRefresh={loadChildren} 
                 onFileChange={onFileChange} 
                 onMove={onMove}
+                onOpenTerminal={onOpenTerminal}
               />
             ))
           )}
@@ -179,7 +185,7 @@ const FileTreeItem = ({ item, parentPath, onRefresh, onFileChange, onMove }) => 
 };
 
 
-export default function FileExplorer({ onFileChange }) {
+export default function FileExplorer({ onFileChange, onOpenTerminal }) {
   const [rootFiles, setRootFiles] = useState([]);
   const [isCreatingFile, setIsCreatingFile] = useState(false);
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
@@ -309,6 +315,7 @@ export default function FileExplorer({ onFileChange }) {
               onRefresh={loadRoot} 
               onFileChange={onFileChange} 
               onMove={handleMove}
+              onOpenTerminal={onOpenTerminal}
             />
           ))
         )}

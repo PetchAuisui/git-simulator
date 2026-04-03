@@ -8,12 +8,20 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        const username = localStorage.getItem('username');
-        if (token && username) {
-            setUser({ username, token });
+        console.log('AuthProvider: Initializing...');
+        try {
+            const token = localStorage.getItem('token');
+            const username = localStorage.getItem('username');
+            if (token && username) {
+                setUser({ username, token });
+                console.log('AuthProvider: Restored user', username);
+            }
+        } catch (error) {
+            console.error('AuthProvider: Initialization error', error);
+        } finally {
+            setLoading(false);
+            console.log('AuthProvider: Loading finished');
         }
-        setLoading(false);
     }, []);
 
     const login = async (username, password) => {
