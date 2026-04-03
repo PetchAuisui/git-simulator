@@ -18,7 +18,14 @@ const getSafePath = (root, relativePath) => {
 router.get('/', async (req, res) => {
     try {
         const root = req.workspaceRoot;
-        const dirPath = req.query.path ? getSafePath(root, req.query.path) : root;
+        const requestedPath = req.query.path || '';
+
+        // Block any access to .git internals
+        if (requestedPath === '.git' || requestedPath.startsWith('.git/') || requestedPath.startsWith('.git\\')) {
+            return res.status(403).json({ error: 'Access to .git directory is not allowed' });
+        }
+
+        const dirPath = requestedPath ? getSafePath(root, requestedPath) : root;
         
         if (!(await fs.pathExists(dirPath))) {
             return res.status(404).json({ error: 'Path not found' });
@@ -26,7 +33,9 @@ router.get('/', async (req, res) => {
 
         const items = await fs.readdir(dirPath, { withFileTypes: true });
         
-        const files = items.map(item => ({
+        const files = items
+        .filter(item => item.name !== '.git') // Always hide .git folder
+        .map(item => ({
             name: item.name,
             isDirectory: item.isDirectory(),
             path: path.relative(root, path.join(dirPath, item.name)).replace(/\\/g, '/')

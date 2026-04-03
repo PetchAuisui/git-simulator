@@ -1,5 +1,7 @@
 const express = require('express');
-const { execSync } = require('child_process');
+const { exec } = require('child_process');
+const util = require('util');
+const execAsync = util.promisify(exec);
 const path = require('path');
 const fs = require('fs-extra');
 
@@ -24,7 +26,10 @@ router.post('/execute', async (req, res) => {
             }
         }
 
-        // Ensure the directory exists
+        // Ensure the user's workspace directory exists
+        await fs.ensureDir(req.workspaceRoot);
+
+        // Ensure the specific directory exists
         if (!(await fs.pathExists(fullPath))) {
             return res.status(400).json({ error: 'Directory not found' });
         }
@@ -36,19 +41,21 @@ router.post('/execute', async (req, res) => {
         }
 
         try {
-            const output = execSync(command, {
+            // Use execAsync with a 10-second timeout to prevent permanent hangs
+            const { stdout, stderr } = await execAsync(command, {
                 cwd: fullPath,
                 encoding: 'utf-8',
-                stdio: ['pipe', 'pipe', 'pipe']
+                timeout: 10000 // 10 seconds timeout
             });
 
             res.json({
                 success: true,
-                output: output,
+                output: stdout,
+                error: stderr,
                 workingPath: fullPath
             });
         } catch (execError) {
-            // Command failed but we still return the output
+            // Command failed
             res.json({
                 success: false,
                 output: execError.stdout || '',

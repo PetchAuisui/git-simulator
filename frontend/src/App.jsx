@@ -8,117 +8,134 @@ import AuthScreen from './components/AuthScreen';
 import LandingPage from './components/LandingPage';
 import { AuthContext } from './contexts/AuthContext';
 import { gitApi } from './api';
+import GitGraph from './components/GitGraph';
+import { GitCommit } from 'lucide-react';
 
 function MainApp() {
   const { user, logout } = useContext(AuthContext);
   const [gitStatus, setGitStatus] = useState(null);
+  const [gitLog, setGitLog] = useState([]);
   const [isRepo, setIsRepo] = useState(false);
-  const [isTerminalOpen, setIsTerminalOpen] = useState(false);
   const [terminalPath, setTerminalPath] = useState('');
+  const [fileRefreshKey, setFileRefreshKey] = useState(0);
 
-  const fetchGitStatus = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     try {
-      const { data } = await gitApi.status();
-      setIsRepo(data.isRepo);
-      if (data.isRepo) {
-        setGitStatus(data);
+      const { data: statusData } = await gitApi.status();
+      setIsRepo(statusData.isRepo);
+      if (statusData.isRepo) {
+        setGitStatus(statusData);
+        const { data: logData } = await gitApi.log();
+        setGitLog(logData.commits);
       } else {
         setGitStatus(null);
+        setGitLog([]);
       }
+      // Trigger FileExplorer to refresh its tree after any git operation
+      setFileRefreshKey(k => k + 1);
     } catch (error) {
-      console.error('Failed to fetch git status:', error);
-      toast.error('Failed to fetch git status');
+      console.error('Failed to fetch data:', error);
     }
   }, []);
 
   useEffect(() => {
-    fetchGitStatus();
-  }, [fetchGitStatus]);
+    fetchData();
+  }, [fetchData]);
 
   const handleOpenTerminal = (path) => {
     setTerminalPath(path || '');
-    setIsTerminalOpen(true);
-  };
-
-  const handleCloseTerminal = () => {
-    setIsTerminalOpen(false);
-    setTerminalPath('');
   };
 
   return (
-    <div className="flex h-screen w-screen bg-slate-900 text-slate-50 overflow-hidden">
+    <div className="flex h-screen w-screen bg-slate-950 text-slate-50 overflow-hidden font-sans">
       <Toaster position="top-right" />
       
-      {/* Header */}
-      <div className="absolute top-0 left-0 w-full h-14 bg-slate-950 border-b border-slate-800 flex items-center justify-between px-6 z-10 shadow-md">
-        <div className="flex items-center">
-            <h1 className="text-xl font-bold bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent flex items-center gap-2">
+      {/* Top Navbar */}
+      <div className="absolute top-0 left-0 w-full h-12 bg-slate-900/80 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-6 z-20">
+        <div className="flex items-center gap-4">
+            <h1 className="text-lg font-black tracking-tighter bg-gradient-to-br from-orange-400 via-rose-500 to-purple-600 bg-clip-text text-transparent uppercase italic">
             git simulator
             </h1>
-            {isRepo && (
-            <span className="ml-4 px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-xs font-mono text-emerald-400">
-                {gitStatus?.currentBranch || 'main'}
-            </span>
-            )}
+            <div className="h-4 w-[1px] bg-white/10 mx-2"></div>
+            <div className="flex items-center gap-2">
+                <span className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Active Workspace</span>
+                <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] font-mono text-orange-400">
+                    @{user?.username}
+                </span>
+            </div>
         </div>
-        <div className="flex items-center gap-4">
-            <span className="text-sm text-slate-400">Workspace: <span className="text-orange-400 font-medium">@{user?.username}</span></span>
+        <div className="flex items-center gap-6">
             <button 
                 onClick={logout}
-                className="px-3 py-1.5 text-xs font-medium rounded-md border border-rose-500/30 text-rose-400 hover:bg-rose-500/10 transition-colors"
+                className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-rose-400 transition-colors"
             >
-                Logout
+                Disconnect
             </button>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex w-full pt-14">
-        {/* Left Pane - File Explorer */}
-        <div className="w-1/3 min-w-[300px] border-r border-slate-800 bg-slate-900/50 flex flex-col">
-          <div className="p-4 border-b border-slate-800 bg-slate-900 font-medium text-slate-400 uppercase text-xs tracking-wider">
-            File Explorer
+      {/* Workspace Area */}
+      <div className="flex w-full h-full pt-12">
+        
+        {/* Left: File System */}
+        <div className="w-64 min-w-[250px] border-r border-white/5 bg-slate-900/30 flex flex-col">
+          <div className="px-4 py-3 border-b border-white/5 bg-slate-900/50">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Explorer</span>
           </div>
-          <div className="flex-1 overflow-auto p-4">
-             <FileExplorer onFileChange={fetchGitStatus} onOpenTerminal={handleOpenTerminal} />
+          <div className="flex-1 overflow-auto">
+             <FileExplorer onFileChange={fetchData} onOpenTerminal={handleOpenTerminal} refreshKey={fileRefreshKey} />
           </div>
         </div>
 
-        {/* Right Pane - Git Controls */}
-        <div className="flex-1 flex flex-col bg-slate-900">
-          <div className="p-4 border-b border-slate-800 bg-slate-900 flex justify-between items-center">
-            <span className="font-medium text-slate-400 uppercase text-xs tracking-wider">
-              Git Source Control
-            </span>
-          </div>
-          
-          <div className="flex-1 overflow-auto p-6">
-            {isRepo ? (
-              <GitPanel gitStatus={gitStatus} refreshStatus={fetchGitStatus} />
-            ) : (
-              <div className="h-full flex flex-col items-center justify-center text-slate-500 gap-4">
-                <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center">
-                  <span className="text-3xl text-slate-600">📦</span>
+        {/* Center: Visuals & Console */}
+        <div className="flex-1 flex flex-col bg-slate-950">
+           {/* Top: Git Graph */}
+           <div className="flex-[1.5] border-b border-white/5 flex flex-col min-h-0 bg-gradient-to-b from-slate-900/20 to-transparent">
+              {isRepo ? (
+                <GitGraph commits={gitLog} />
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-slate-500 p-10 text-center">
+                    <div className="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-6 animate-pulse">
+                        <GitCommit size={32} className="opacity-20" />
+                    </div>
+                    <h3 className="text-sm font-bold text-slate-300 mb-2 uppercase tracking-tight">System Offline</h3>
+                    <p className="text-xs max-w-xs leading-relaxed opacity-60">
+                        No active repository detected in this workspace. <br/>
+                        Initialize git via the terminal below to start simulation.
+                    </p>
                 </div>
-                <h3 className="text-lg font-medium text-slate-400">Not a Git Repository</h3>
-                <p className="text-sm max-w-sm text-center">
-                  The current workspace is not tracked by Git. Use the terminal to run <code className="bg-slate-800 px-2 py-1 rounded text-orange-400">git init</code> to initialize a repository.
-                </p>
+              )}
+           </div>
+
+           {/* Bottom: Terminal */}
+           <div className="flex-1 flex flex-col min-h-0">
+             <Terminal 
+                workingPath={terminalPath}
+                refreshStatus={fetchData}
+                onRepoInitialized={fetchData}
+              />
+           </div>
+        </div>
+
+        {/* Right: Git Actions */}
+        <div className="w-80 min-w-[300px] border-l border-white/5 bg-slate-900/30 flex flex-col">
+          <div className="px-4 py-3 border-b border-white/5 bg-slate-900/50">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Source Control</span>
+          </div>
+          <div className="flex-1 overflow-auto">
+            {isRepo ? (
+              <div className="p-4">
+                <GitPanel gitStatus={gitStatus} refreshStatus={fetchData} />
               </div>
+            ) : (
+                <div className="p-8 text-center mt-10">
+                    <p className="text-xs text-slate-600 italic">Stage and commit interface will activate once repository is initialized.</p>
+                </div>
             )}
           </div>
         </div>
-      </div>
 
-      {/* Terminal Window */}
-      {isTerminalOpen && (
-        <Terminal 
-          workingPath={terminalPath}
-          onClose={handleCloseTerminal}
-          refreshStatus={fetchGitStatus}
-          onRepoInitialized={fetchGitStatus}
-        />
-      )}
+      </div>
     </div>
   );
 }

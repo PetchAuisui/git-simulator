@@ -39,6 +39,19 @@ const initDB = async () => {
 }
 
 module.exports = {
-  query: (text, params) => pool.query(text, params),
+  query: async (text, params) => {
+    const start = Date.now();
+    try {
+      console.log(`[DB] Executing: ${text.substring(0, 100)}${text.length > 100 ? '...' : ''}`);
+      const res = await pool.query(text, params);
+      const duration = Date.now() - start;
+      console.log(`[DB] Executed in ${duration}ms. Rows: ${res.rowCount}`);
+      return res;
+    } catch (err) {
+      const duration = Date.now() - start;
+      console.error(`[DB] Error in ${duration}ms! Query: ${text}`, err);
+      throw err;
+    }
+  },
   initDB
 };

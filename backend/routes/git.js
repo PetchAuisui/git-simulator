@@ -44,8 +44,8 @@ router.get('/status', async (req, res) => {
         res.json({
             isRepo: true,
             currentBranch: status.current,
-            staged: status.staged.concat(status.created),
-            modified: status.modified.concat(status.deleted),
+            staged: [...new Set([...status.staged, ...status.created])],
+            modified: status.modified.concat(status.deleted).filter(f => !status.staged.includes(f) && !status.created.includes(f)),
             untracked: status.not_added,
             all: status.files
         });
@@ -105,6 +105,23 @@ router.post('/commit', async (req, res) => {
 
         const result = await git.commit(message);
         res.json({ success: true, commitId: result.commit, branch: result.branch });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+// GET /api/git/log - Get commit history
+router.get('/log', async (req, res) => {
+    try {
+        const gitPath = path.join(req.workspaceRoot, '.git');
+        if (!(await fs.pathExists(gitPath))) {
+            return res.json({ commits: [] });
+        }
+        const git = getGit(req.workspaceRoot);
+        // Getting last 50 commits for performance and graph clarity
+        const log = await git.log({ maxCount: 50 });
+        res.json({ commits: log.all });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
