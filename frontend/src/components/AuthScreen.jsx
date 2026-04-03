@@ -46,7 +46,7 @@ export default function AuthScreen() {
             <div className="z-10 w-full max-w-md p-8 rounded-2xl bg-slate-800/80 backdrop-blur-xl border border-slate-700 shadow-2xl shadow-rose-500/10 transition-all">
                 <div className="text-center mb-8">
                     <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-400 to-rose-500 bg-clip-text text-transparent mb-2">
-                        Git Di Waa
+                        git simulator
                     </h1>
                     <p className="text-slate-400 text-sm">
                         {isLogin ? 'Sign in to access your workspace' : 'Create an account to start tracking'}

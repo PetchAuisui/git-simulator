@@ -13,7 +13,7 @@ export default function LandingPage() {
             {/* Navbar */}
             <nav className="relative z-10 flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
                 <div className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-rose-500 bg-clip-text text-transparent flex items-center gap-2">
-                    Git Di Waa
+                    git simulator
                 </div>
                 <div className="flex items-center gap-4">
                     <button 
@@ -49,7 +49,7 @@ export default function LandingPage() {
                 </h1>
                 
                 <p className="text-lg md:text-xl text-slate-400 max-w-2xl mb-12 leading-relaxed">
-                    Git Di Waa is an interactive, visual Git workspace designed for you to practice, simulate, and understand branch workflows safely in your own isolated environment.
+                    git simulator is an interactive, visual Git workspace designed for you to practice, simulate, and understand branch workflows safely in your own isolated environment.
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-center gap-4">

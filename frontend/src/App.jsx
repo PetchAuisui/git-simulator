@@ -50,7 +50,7 @@ function MainApp() {
       <div className="absolute top-0 left-0 w-full h-14 bg-slate-950 border-b border-slate-800 flex items-center justify-between px-6 z-10 shadow-md">
         <div className="flex items-center">
             <h1 className="text-xl font-bold bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent flex items-center gap-2">
-            Git Di Waa
+            git simulator
             </h1>
             {isRepo && (
             <span className="ml-4 px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-xs font-mono text-emerald-400">
