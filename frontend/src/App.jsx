@@ -1,10 +1,15 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useContext } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster, toast } from 'react-hot-toast';
 import FileExplorer from './components/FileExplorer';
 import GitPanel from './components/GitPanel';
+import AuthScreen from './components/AuthScreen';
+import LandingPage from './components/LandingPage';
+import { AuthContext } from './contexts/AuthContext';
 import { gitApi } from './api';
 
-function App() {
+function MainApp() {
+  const { user, logout } = useContext(AuthContext);
   const [gitStatus, setGitStatus] = useState(null);
   const [isRepo, setIsRepo] = useState(false);
 
@@ -42,15 +47,26 @@ function App() {
       <Toaster position="top-right" />
       
       {/* Header */}
-      <div className="absolute top-0 left-0 w-full h-14 bg-slate-950 border-b border-slate-800 flex items-center px-6 z-10 shadow-md">
-        <h1 className="text-xl font-bold bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent flex items-center gap-2">
-           Git Di Waa
-        </h1>
-        {isRepo && (
-          <span className="ml-4 px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-xs font-mono text-emerald-400">
-            {gitStatus?.currentBranch || 'main'}
-          </span>
-        )}
+      <div className="absolute top-0 left-0 w-full h-14 bg-slate-950 border-b border-slate-800 flex items-center justify-between px-6 z-10 shadow-md">
+        <div className="flex items-center">
+            <h1 className="text-xl font-bold bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent flex items-center gap-2">
+            Git Di Waa
+            </h1>
+            {isRepo && (
+            <span className="ml-4 px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-xs font-mono text-emerald-400">
+                {gitStatus?.currentBranch || 'main'}
+            </span>
+            )}
+        </div>
+        <div className="flex items-center gap-4">
+            <span className="text-sm text-slate-400">Workspace: <span className="text-orange-400 font-medium">@{user?.username}</span></span>
+            <button 
+                onClick={logout}
+                className="px-3 py-1.5 text-xs font-medium rounded-md border border-rose-500/30 text-rose-400 hover:bg-rose-500/10 transition-colors"
+            >
+                Logout
+            </button>
+        </div>
       </div>
 
       {/* Main Content */}
@@ -105,6 +121,19 @@ function App() {
         </div>
       </div>
     </div>
+  );
+}
+
+function App() {
+  const { user } = useContext(AuthContext);
+
+  return (
+    <Routes>
+      <Route path="/" element={!user ? <LandingPage /> : <Navigate to="/workspace" />} />
+      <Route path="/auth" element={!user ? <AuthScreen /> : <Navigate to="/workspace" />} />
+      <Route path="/workspace" element={user ? <MainApp /> : <Navigate to="/auth" />} />
+      <Route path="*" element={<Navigate to="/" />} />
+    </Routes>
   );
 }
 
